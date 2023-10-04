@@ -1,0 +1,19 @@
+<h2>User followers</h2>
+<% if @followers.empty? %>
+  <%= "ユーザーはいません" %>
+<% else %>
+  <table class="table">
+    <th>image</th>
+    <th>name</th>
+    <th colspan = "3"></th>
+    <% @followers.each do |user| %>
+      <tr>
+        <td><%= image_tag user.get_profile_image, size: "100x100" %></td>
+        <td><%= user.name %></td>
+        <td>フォロー数：<%= user.active_relationships.count %></td>
+        <td>フォロワー数：<%= user.passive_relationships.count %></td>
+        <td><%= link_to "Show", user_path(user) %></td>
+      </tr>
+    <% end %>
+  </table>
+<% end %>
