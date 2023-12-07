@@ -3,44 +3,39 @@ class User < ApplicationRecord
   # :confirmable, :lockable, :timeoutable, :trackable and :omniauthable
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable
-
-  has_many :books, dependent: :destroy
-  has_many :book_comments, dependent: :destroy
-  has_many :favorites, dependent: :destroy
-  
-  has_many :active_relationships, class_name: "Relationship", foreign_key: :following_id, dependent: :destroy
-  has_many :followings, through: :active_relationships, source: :follower
-  
-  has_many :passive_relationships, class_name: "Relationship", foreign_key: :follower_id, dependent: :destroy
-  has_many :followers, through: :passive_relationships, source: :following
-  
+         
   has_one_attached :profile_image
-
-  validates :name, length: { minimum: 2, maximum: 20 }, uniqueness: true
+  
+  has_many :books, dependent: :destroy
+  
+  validates :name, length: { minimum: 2, maximum: 20}, uniqueness: true
+  
   validates :introduction, length: { maximum: 50}
   
-
-  
-  
-  def get_profile_image
-    (profile_image.attached?) ? profile_image : 'no_image.jpg'
-  end
-  
-  def followed_by?(user)
-    passive_relationships.find_by(following_id: user.id).present?
-  end
-  
-  def  self.search_for(search, word)
-    if search == "perfect"
-      @user = User.where(name: word)
-    elsif search == "forword"
-      @user =User.where("name LIKE?", "#{word}%")
-    elsif search == "backword"
-      @user =User.where("name LIKE?", "%#{word}")
-    elsif search == "partial"
-      @user =User.where("name LIKE?", "%#{word}%")
-    else
-      @user =User.all
+  def get_profile_image(width,height)
+      
+    unless profile_image.attached?
+    
+      file_path = Rails.root.join('app/assets/images.1/no_image.jpg')
+    
+      profile_image.attach(io: File.open(file_path), filename: 'default-image.jpg', content_type: 'image/jpeg')
+    
     end
+    
+      profile_image.variant(resize_to_limit: [width,height]).processed
+  
+  end
+  
+  GUEST_USER_EMAIL = "guest@example.com"
+    
+  def  self.guest
+    find_or_create_by!(email: GUEST_USER_EMAIL) do |user|
+      user.password = SecureRandom.urlsafe_base64
+      user.name = "guestuser"
+    end
+  end
+  
+  def guest_user?
+    email == GUEST_USER_EMAIL
   end
 end
